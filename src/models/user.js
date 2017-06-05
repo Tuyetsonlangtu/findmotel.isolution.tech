@@ -3,21 +3,22 @@
  */
 
 "use strict";
-import randomString from 'randomstring';
 import mongoose from 'mongoose';
+import { generateCode } from '../common/common';
 let Schema = mongoose.Schema;
 
 function metSalt(){
-  return randomString.generate({length: 50});
+  return generateCode(50);
 }
+
 function metSetId() {
-  return randomString.generate(12);
+  return generateCode(12);
 }
 
 const User = new Schema({
   _id: {
     type: String,
-    default: metSetId,
+    default: generateCode,
     index: true,
     unique: true
   },
