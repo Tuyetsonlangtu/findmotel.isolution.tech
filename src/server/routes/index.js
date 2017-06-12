@@ -6,9 +6,15 @@
 
 import express from 'express';
 import fbPassport from '../passport/auth.facebook';
+import {tokenGenerate, setTokenCookie, removeTokenCookie} from '../../common/common';
+
 let router = express.Router();
 
-router.get('/', (req, res) => {
+router.get('/status', (req, res) => {
+  var cookies = req.cookies;
+  // res.cookie("token", "", { expires: new Date() });
+  // res.cookie("id_token", "", { expires: new Date() });
+  console.log("cookie: ", cookies.token);
   res.json({status: "server runing"});
 });
 
@@ -20,15 +26,30 @@ router.get('/auth/facebook',
   fbPassport.authenticate('facebook', { scope: ['email', 'user_location'], session: false })
 );
 
-router.get('/auth/facebook/callback', (req, res, next) => {
-  fbPassport.authenticate('facebook', (err) => {
-    let rs = {
-      success: err,
-      message: "login success"
+router.get('/auth/facebook/callback',
+  fbPassport.authenticate('facebook', {session: false }),
+  (req, res) => {
+    if (req.user) {
+      let user = {
+        id: req.user._id,
+        username: req.user.username,
+        email: req.user.email
+      }
+      let token = tokenGenerate(user);
+      user['profile'] = req.user.profile;
+      setTokenCookie(res, token);
+      res.json({
+        token: token,
+        user: user
+      });
     }
-    if(err) rs = { success: err, message: 'login fail' }
-    return res.json(rs);
-  })(req, res, next);
+    else {
+      removeTokenCookie(res);
+      res.json({
+        token: "",
+        user: null
+      });
+    }
 });
 
 export default router;

@@ -5,7 +5,8 @@
 import passport from 'passport';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 import config from './config';
-import {User} from '../../models';
+import { UserLogin , User, UserProfile} from '../../models';
+import { passwordEncryption } from '../../common/common';
 
 passport.use(new FacebookStrategy({
   clientID: config.auth.facebook.clientID,
@@ -13,102 +14,77 @@ passport.use(new FacebookStrategy({
   callbackURL: config.auth.facebook.callbackURL,
   profileFields: ['displayName', 'name', 'email', 'link', 'locale', 'timezone'],
   passReqToCallback: true,
-}, (req, accessToken, refreshToken, profile, done) => {
-
+}, (req, accessToken, refreshToken, profile, next) => {
   const loginName = 'facebook';
   const claimType = 'urn:facebook:access_token';
-
   const fooBar = async () => {
     if (req.user) {
-      const userLogin = await UserLogin.findOne({
-        attributes: ['name', 'key'],
-        where: { name: loginName, key: profile.id },
-      });
-      if (userLogin) {
-        // There is already a Facebook account that belongs to you.
-        // Sign in with that account or delete it, then link it with your current account.
-        done();
-      } else {
-        const user = await User.create({
-          id: req.user.id,
-          email: profile._json.email,
-          logins: [
-            { name: loginName, key: profile.id },
-          ],
-          claims: [
-            { type: claimType, value: profile.id },
-          ],
-          profile: {
-            displayName: profile.displayName,
-            gender: profile._json.gender,
-            picture: `https://graph.facebook.com/${profile.id}/picture?type=large`,
-          },
-        }, {
-          include: [
-            { model: UserLogin, as: 'logins' },
-            { model: UserClaim, as: 'claims' },
-            { model: UserProfile, as: 'profile' },
-          ],
-        });
-        done(null, {
-          id: user.id,
-          email: user.email,
-        });
-      }
+      next(null, {id: '123', email: 'Hien Tran',});
     } else {
-      const users = await User.findAll({
-        attributes: ['id', 'email'],
-        where: { '$logins.name$': loginName, '$logins.key$': profile.id },
-        include: [
-          {
-            attributes: ['name', 'key'],
-            model: UserLogin,
-            as: 'logins',
-            required: true,
-          },
-        ],
-      });
-      if (users.length) {
-        const user = users[0].get({ plain: true });
-        done(null, user);
+      let user = await User
+        .findOne({
+          'email': profile._json.email
+        })
+        .populate('profile')
+        .populate({
+          path: 'logins',
+          match: {'name': loginName, 'key': profile.id}
+        });
+
+      if (user) {
+        let userLogin = user.logins.length == 0 ? new UserLogin() : user.logins[0];
+        userLogin.name = loginName;
+        userLogin.key = profile.id;
+        userLogin.token = accessToken;
+        userLogin = await userLogin.save();
+
+        let userProfile = user.profile ? user.profile : new UserProfile();
+        userProfile.displayName = profile.displayName;
+        userProfile.picture = `https://graph.facebook.com/${profile.id}/picture?type=large`;
+        userProfile.gender = profile._json.gender;
+        userProfile.location = profile.location;
+        userProfile = await userProfile.save();
+
+        if(user.logins.length == 0)
+          user.logins.push(userLogin);
+
+        if(!user.profile)
+          user.profile = userProfile;
+
+        user = await user.save();
+        next(null, user);
+
       } else {
-        let user = await User.findOne({ where: { email: profile._json.email } });
-        if (user) {
-          // There is already an account using this email address. Sign in to
-          // that account and link it with Facebook manually from Account Settings.
-          done(null);
-        } else {
-          user = await User.create({
-            email: profile._json.email,
-            emailConfirmed: true,
-            logins: [
-              { name: loginName, key: profile.id },
-            ],
-            claims: [
-              { type: claimType, value: accessToken },
-            ],
-            profile: {
-              displayName: profile.displayName,
-              gender: profile._json.gender,
-              picture: `https://graph.facebook.com/${profile.id}/picture?type=large`,
-            },
-          }, {
-            include: [
-              { model: UserLogin, as: 'logins' },
-              { model: UserClaim, as: 'claims' },
-              { model: UserProfile, as: 'profile' },
-            ],
-          });
-          done(null, {
-            id: user.id,
-            email: user.email,
-          });
-        }
+        user = new User();
+        //create login with facebook
+        let userLogin = new UserLogin({
+          name: loginName,
+          key: profile.id,
+          token: accessToken
+        });
+        userLogin = await userLogin.save();
+
+        //create user profile
+        let userProfile = await new UserProfile({
+          displayName: profile.displayName,
+          picture: `https://graph.facebook.com/${profile.id}/picture?type=large`,
+          gender: profile._json.gender,
+          location: profile.location
+        });
+        userProfile = await userProfile.save();
+
+        //main account
+        user.username = "admin";
+        user.password = passwordEncryption("123456", user.salt);
+        user.email = profile._json.email;
+        user.logins.push(userLogin);
+        user.profile = userProfile;
+        user = await user.save();
+        next(null, user);
       }
     }
   };
-
-  fooBar().catch(done);
+  fooBar().catch(next);
 }));
 
 export default passport;

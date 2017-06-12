@@ -6,7 +6,6 @@
 module.exports = {
   // Authentication
   auth: {
-    jwt: { secret: process.env.JWT_SECRET || 'React Starter Kit' },
     facebook: {
       clientID: process.env.FACEBOOK_APP_ID || '2006619856232997',
       clientSecret: process.env.FACEBOOK_APP_SECRET || '2466ea45b5f5d3d1b2227758c08f0922',

@@ -65,26 +65,145 @@ module.exports =
 /******/ 	__webpack_require__.p = "/assets/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 19);
+/******/ 	return __webpack_require__(__webpack_require__.s = 29);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export generateCode */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return createSalt; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return createId; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return passwordEncryption; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return tokenGenerate; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return tokenDecode; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return setTokenCookie; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return removeTokenCookie; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_randomstring__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_randomstring___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_randomstring__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_crypto__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_crypto___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_crypto__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_jsonwebtoken__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_jsonwebtoken___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_jsonwebtoken__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__config__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__config___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3__config__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__const__ = __webpack_require__(11);
+/**
+ * Created by hientran on 6/3/17.
+ */
+
+
+
+
+
+
+
+function generateCode(num) {
+  return __WEBPACK_IMPORTED_MODULE_0_randomstring___default.a.generate(num);
+}
+
+function createSalt(){
+  return generateCode(50);
+}
+
+function createId(){
+  return generateCode(12);
+}
+
+function passwordEncryption(pass, salt) {
+  const hash = __WEBPACK_IMPORTED_MODULE_1_crypto___default.a.createHash("sha256");
+  let code = hash.update(pass) + salt;
+  return hash.update(code).digest("hex");
+}
+
+function tokenGenerate(objData) {
+  const expiresIn = __WEBPACK_IMPORTED_MODULE_3__config___default.a.jwt.expiresIn;
+  objData.iss = __WEBPACK_IMPORTED_MODULE_3__config___default.a.jwt.issuer;
+  objData.aud = objData.email;
+  let token = __WEBPACK_IMPORTED_MODULE_2_jsonwebtoken___default.a.sign(objData, __WEBPACK_IMPORTED_MODULE_3__config___default.a.jwt.secret, {
+    expiresIn: expiresIn
+  });
+  return token;
+}
+
+function tokenDecode(token, objKey) {
+  if(!objKey) objKey = {}
+  objKey.issuer = __WEBPACK_IMPORTED_MODULE_3__config___default.a.jwt.issuer;
+  console.log("objKey: ", objKey);
+  return new Promise((resolve, reject) => {
+    __WEBPACK_IMPORTED_MODULE_2_jsonwebtoken___default.a.verify(token, __WEBPACK_IMPORTED_MODULE_3__config___default.a.jwt.secret, objKey, function (err, decoded) {
+      console.log("decoded: ", decoded);
+      if (err)
+        resolve();
+      else {
+        resolve(decoded);
+      }
+    });
+  });
+}
+
+function setCookie(res, key, value){
+  res.cookie(key, value, {
+    expires: __WEBPACK_IMPORTED_MODULE_3__config___default.a.cookie.expires,
+    httpOnly: __WEBPACK_IMPORTED_MODULE_3__config___default.a.cookie.httpOnly
+  });
+}
+
+function removeCookie(res, key) {
+  res.cookie(key, "", {
+    expires: new Date()
+  });
+}
+
+function setTokenCookie(res, token) {
+  setCookie(res, __WEBPACK_IMPORTED_MODULE_4__const__["a" /* default */].token, token);
+}
+
+function removeTokenCookie(res) {
+  removeCookie(res, __WEBPACK_IMPORTED_MODULE_4__const__["a" /* default */].token);
+}
+
+
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports) {
 
 module.exports = require("express");
 
 /***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 2 */
+/***/ (function(module, exports) {
 
+module.exports = require("mongoose");
 
-if (false) {
-  throw new Error('Do not import `config.js` from inside the client-side code.');
-}
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+module.exports = require("passport");
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
 
 const port = 4000;
 module.exports = {
+
+  jwt: {
+    secret: process.env.JWT_SECRET || 'findmotel.isolution.tech',
+    expiresIn: 60 * 60 * 24 * 30,
+    issuer: 'findmotel.isolution.tech'
+  },
+
+  cookie: {
+    expires: new Date(Date.now() + 9999999),
+    httpOnly: false
+  },
+
   // Node.js app
   port: process.env.PORT || port,
 
@@ -102,7 +221,7 @@ module.exports = {
 
   database: {
     mongoose: {
-      databaseURI : "mongodb://10.0.15.5:27017/ISolution-FindMotel",
+      databaseURI : "mongodb://localhost:27017/ISolution-FindMotel",
       logging: false
     }
   }
@@ -110,38 +229,114 @@ module.exports = {
 
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports) {
+/* 5 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = require("mongoose");
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return systems; });
+/**
+ * Created by hien.tran on 6/9/2017.
+ */
+
+const systems = {
+  unauthorized: {
+    code: 401,
+    msg: "Unauthorized!"
+  },
+  forbidden: {
+    code: 403,
+    msg: "Forbidden!"
+  },
+  notFound: {
+    code: 404,
+    msg: "Not Found!"
+  },
+  invalidToken: {
+    code: 600,
+    msg: 'Invalid Token!'
+  },
+  systemError: {
+    code: 500,
+    msg: "System Error!"
+  }
+}
+
+
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports) {
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = require("passport");
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return UserLogin; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return User; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return UserProfile; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mongoose__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_config__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_config___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__common_config__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__User__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__UserLogin__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__UserProfile__ = __webpack_require__(14);
+/**
+ * Created by hien.tran on 6/2/2017.
+ */
+
+
+
+
+
+
+
+
+//Config mongodb
+let conn = __WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.createConnection(__WEBPACK_IMPORTED_MODULE_1__common_config___default.a.database.mongoose.databaseURI)
+let Schema = __WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.Schema;
+__WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.Promise = Promise;
+__WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.set('debug', __WEBPACK_IMPORTED_MODULE_1__common_config___default.a.database.mongoose.logging);
+
+const User = conn.model(__WEBPACK_IMPORTED_MODULE_2__User__["a" /* default */].name, __WEBPACK_IMPORTED_MODULE_2__User__["a" /* default */].schema);
+const UserProfile = conn.model(__WEBPACK_IMPORTED_MODULE_4__UserProfile__["a" /* default */].name, __WEBPACK_IMPORTED_MODULE_4__UserProfile__["a" /* default */].schema);
+const UserLogin = conn.model(__WEBPACK_IMPORTED_MODULE_3__UserLogin__["a" /* default */].name, __WEBPACK_IMPORTED_MODULE_3__UserLogin__["a" /* default */].schema);
+
 
 /***/ }),
-/* 4 */
+/* 7 */
+/***/ (function(module, exports) {
+
+module.exports = require("crypto");
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports) {
+
+module.exports = require("oauth2orize");
+
+/***/ }),
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_path__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_path__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_path___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_path__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_express__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_express__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_express___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_express__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_cookie_parser__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_cookie_parser__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_cookie_parser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_cookie_parser__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_body_parser__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_body_parser__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_body_parser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_body_parser__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_config__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_config__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_config___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4__common_config__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_passport__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_passport___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_passport__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__routes__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__routes_api__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__routes_api___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7__routes_api__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__routes__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__routes_api__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__passport_auth__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__passport_oauth__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_crypto__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_crypto___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_10_crypto__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__common_common_code__ = __webpack_require__(5);
 /**
  * Created by hien.tran on 5/29/2017.
  */
@@ -156,87 +351,90 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
+
+
+
+
 let app = __WEBPACK_IMPORTED_MODULE_1_express___default()();
 
-app.use(__WEBPACK_IMPORTED_MODULE_1_express___default.a.static(__WEBPACK_IMPORTED_MODULE_0_path___default.a.join(__dirname, 'public')));
+//random secret key when start server node
+//config.jwt.secret = crypto.randomBytes(48).toString('hex');
 app.use(__WEBPACK_IMPORTED_MODULE_2_cookie_parser___default()());
 app.use(__WEBPACK_IMPORTED_MODULE_3_body_parser___default.a.urlencoded({ extended: true }));
 app.use(__WEBPACK_IMPORTED_MODULE_3_body_parser___default.a.json());
 
+app.use(__WEBPACK_IMPORTED_MODULE_1_express___default.a.static(__WEBPACK_IMPORTED_MODULE_0_path___default.a.join(__dirname, 'public')));
+app.all('/*', function(req, res, next) {
+  // CORS headers
+  res.header("Access-Control-Allow-Origin", "*"); // restrict it to the required domain
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  // Set custom headers for CORS
+  res.header('Access-Control-Allow-Headers', 'Content-type,Accept,X-Access-Token,X-Key');
+  if (req.method == 'OPTIONS') {
+    res.status(200).end();
+  } else {
+    next();
+  }
+});
+
 app.use("/", __WEBPACK_IMPORTED_MODULE_6__routes__["a" /* default */]);
+
 app.use(__WEBPACK_IMPORTED_MODULE_5_passport___default.a.initialize());
-app.use("/api", __WEBPACK_IMPORTED_MODULE_7__routes_api___default.a);
+app.post('/oauth/token', __WEBPACK_IMPORTED_MODULE_9__passport_oauth__["a" /* default */].token);
+app.all('/api/*', __WEBPACK_IMPORTED_MODULE_8__passport_auth__["a" /* default */]);
+app.use("/api", __WEBPACK_IMPORTED_MODULE_7__routes_api__["a" /* default */]);
+
+app.use(function (err, req, res, next) {
+  switch(err.code){
+    case 401:
+      res.status(401).json(__WEBPACK_IMPORTED_MODULE_11__common_common_code__["a" /* systems */].unauthorized);
+      break;
+    case 403:
+      res.status(403).json(__WEBPACK_IMPORTED_MODULE_11__common_common_code__["a" /* systems */].forbidden);
+      break;
+    default:
+      res.status(err.status || 500).json(__WEBPACK_IMPORTED_MODULE_11__common_common_code__["a" /* systems */].systemError);
+      break;
+  }
+});
+
+app.use(function(req, res, next) {
+  res.status(404).json(__WEBPACK_IMPORTED_MODULE_11__common_common_code__["a" /* systems */].notFound);
+});
 
 app.listen(__WEBPACK_IMPORTED_MODULE_4__common_config___default.a.port, () => {
   console.info(`The server is running at http://localhost:${__WEBPACK_IMPORTED_MODULE_4__common_config___default.a.port}/`);
 });
 
 /***/ }),
-/* 5 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = require("babel-polyfill");
 
 /***/ }),
-/* 6 */
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return generateCode; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_randomstring__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_randomstring___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_randomstring__);
 /**
- * Created by hientran on 6/3/17.
+ * Created by hien.tran on 6/12/2017.
  */
 
-
-
-
-function generateCode(num) {
-  return __WEBPACK_IMPORTED_MODULE_0_randomstring___default.a.generate(num);
+const CONST = {
+  token: 'token'
 }
 
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return User; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mongoose__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_config__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_config___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__common_config__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__user__ = __webpack_require__(8);
-/**
- * Created by hien.tran on 6/2/2017.
- */
-
-
-
-
-
-
-//Config mongodb
-let conn = __WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.createConnection(__WEBPACK_IMPORTED_MODULE_1__common_config___default.a.database.mongoose.databaseURI)
-let Schema = __WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.Schema;
-__WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.Promise = Promise;
-__WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.set('debug', __WEBPACK_IMPORTED_MODULE_1__common_config___default.a.database.mongoose.logging);
-
-
-const User = conn.model(__WEBPACK_IMPORTED_MODULE_2__user__["a" /* default */].name, __WEBPACK_IMPORTED_MODULE_2__user__["a" /* default */].schema);
-
-
+/* harmony default export */ __webpack_exports__["a"] = (CONST);
 
 /***/ }),
-/* 8 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mongoose__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_common__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_common__ = __webpack_require__(0);
 /**
  * Created by hien.tran on 6/2/2017.
  */
@@ -245,60 +443,72 @@ const User = conn.model(__WEBPACK_IMPORTED_MODULE_2__user__["a" /* default */].n
 
 
 let Schema = __WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.Schema;
-
-function metSalt(){
-  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__common_common__["a" /* generateCode */])(50);
-}
-
-function metSetId() {
-  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__common_common__["a" /* generateCode */])(12);
-}
 
 const User = new Schema({
   _id: {
     type: String,
-    default: __WEBPACK_IMPORTED_MODULE_1__common_common__["a" /* generateCode */],
+    default: __WEBPACK_IMPORTED_MODULE_1__common_common__["f" /* createId */],
     index: true,
     unique: true
   },
+
   username:{
     type: String,
     unique: true,
   },
+
   password:{
     type: String,
     unique: true,
   },
+
   salt: {
     type: String,
-    default: metSalt
+    default: __WEBPACK_IMPORTED_MODULE_1__common_common__["g" /* createSalt */]
   },
-  fullname: {
-    type: String,
-    unique: true,
-    sparse: true,
-    dropDups: true
-  },
+
   email: {
     type: String,
     unique: true,
     sparse: true,
     dropDups: true
   },
-  phone: String,
+
   isAdmin: {
     type: Boolean,
     default: false
   },
-  accessToken: String,
-  expirationDate: Date,
+
+  accessToken: {
+    type: String,
+    default: ''
+  },
+
+  expirationDate: {
+    type: Date,
+    default: Date.now
+  },
+
   isEnabled: {
     type: Boolean,
     default: true
   },
-  createdAt: {
-    type: Date
+
+  logins: [{
+    type: String,
+    ref: 'UserLogin'
+  }],
+
+  profile: {
+    type: String,
+    ref: 'UserProfile'
   },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+
   updatedAt: {
     type: Date,
     default: Date.now
@@ -311,20 +521,145 @@ const User = new Schema({
 });
 
 /***/ }),
-/* 9 */
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mongoose__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_common__ = __webpack_require__(0);
+/**
+ * Created by hien.tran on 6/2/2017.
+ */
+
+
+
+
+
+let Schema = __WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.Schema;
+
+const UserLogin = new Schema({
+  _id: {
+    type: String,
+    default: __WEBPACK_IMPORTED_MODULE_1__common_common__["f" /* createId */],
+    index: true,
+    unique: true
+  },
+
+  name:{
+    type: String,
+    unique: true,
+  },
+
+  key:{
+    type: String,
+    unique: true,
+  },
+
+  token:{
+    type: String,
+    unique: true,
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+  name: 'UserLogin',
+  schema: UserLogin
+});
+
+/***/ }),
+/* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_mongoose___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_mongoose__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_common__ = __webpack_require__(0);
+/**
+ * Created by hien.tran on 6/2/2017.
+ */
+
+
+
+
+
+let Schema = __WEBPACK_IMPORTED_MODULE_0_mongoose___default.a.Schema;
+const UserProfile = new Schema({
+  _id: {
+    type: String,
+    default: __WEBPACK_IMPORTED_MODULE_1__common_common__["f" /* createId */],
+    index: true,
+    unique: true
+  },
+
+  displayName: {
+    type: String,
+    default: ""
+  },
+
+  picture: {
+    type: String,
+    default: ""
+  },
+
+  gender: {
+    type: String,
+    default: ""
+  },
+
+  location: {
+    type: String,
+    default: ''
+  },
+
+  phone: {
+    type: String,
+    default: ''
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+  name: 'UserProfile',
+  schema: UserProfile
+});
+
+/***/ }),
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_passport__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_passport___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_passport__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_passport_facebook__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_passport_facebook__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_passport_facebook___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_passport_facebook__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__config__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__config__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__config___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__config__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__models__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__models__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_common__ = __webpack_require__(0);
 /**
  * Created by hien.tran on 6/2/2017.
  */
+
 
 
 
@@ -337,108 +672,137 @@ __WEBPACK_IMPORTED_MODULE_0_passport___default.a.use(new __WEBPACK_IMPORTED_MODU
   callbackURL: __WEBPACK_IMPORTED_MODULE_2__config___default.a.auth.facebook.callbackURL,
   profileFields: ['displayName', 'name', 'email', 'link', 'locale', 'timezone'],
   passReqToCallback: true,
-}, (req, accessToken, refreshToken, profile, done) => {
-
+}, (req, accessToken, refreshToken, profile, next) => {
   const loginName = 'facebook';
   const claimType = 'urn:facebook:access_token';
-
   const fooBar = async () => {
     if (req.user) {
-      const userLogin = await UserLogin.findOne({
-        attributes: ['name', 'key'],
-        where: { name: loginName, key: profile.id },
-      });
-      if (userLogin) {
-        // There is already a Facebook account that belongs to you.
-        // Sign in with that account or delete it, then link it with your current account.
-        done();
-      } else {
-        const user = await __WEBPACK_IMPORTED_MODULE_3__models__["a" /* User */].create({
-          id: req.user.id,
-          email: profile._json.email,
-          logins: [
-            { name: loginName, key: profile.id },
-          ],
-          claims: [
-            { type: claimType, value: profile.id },
-          ],
-          profile: {
-            displayName: profile.displayName,
-            gender: profile._json.gender,
-            picture: `https://graph.facebook.com/${profile.id}/picture?type=large`,
-          },
-        }, {
-          include: [
-            { model: UserLogin, as: 'logins' },
-            { model: UserClaim, as: 'claims' },
-            { model: UserProfile, as: 'profile' },
-          ],
-        });
-        done(null, {
-          id: user.id,
-          email: user.email,
-        });
-      }
+      next(null, {id: '123', email: 'Hien Tran',});
     } else {
-      const users = await __WEBPACK_IMPORTED_MODULE_3__models__["a" /* User */].findAll({
-        attributes: ['id', 'email'],
-        where: { '$logins.name$': loginName, '$logins.key$': profile.id },
-        include: [
-          {
-            attributes: ['name', 'key'],
-            model: UserLogin,
-            as: 'logins',
-            required: true,
-          },
-        ],
-      });
-      if (users.length) {
-        const user = users[0].get({ plain: true });
-        done(null, user);
+      let user = await __WEBPACK_IMPORTED_MODULE_3__models__["a" /* User */]
+        .findOne({
+          'email': profile._json.email
+        })
+        .populate('profile')
+        .populate({
+          path: 'logins',
+          match: {'name': loginName, 'key': profile.id}
+        });
+
+      if (user) {
+        let userLogin = user.logins.length == 0 ? new __WEBPACK_IMPORTED_MODULE_3__models__["b" /* UserLogin */]() : user.logins[0];
+        userLogin.name = loginName;
+        userLogin.key = profile.id;
+        userLogin.token = accessToken;
+        userLogin = await userLogin.save();
+
+        let userProfile = user.profile ? user.profile : new __WEBPACK_IMPORTED_MODULE_3__models__["c" /* UserProfile */]();
+        userProfile.displayName = profile.displayName;
+        userProfile.picture = `https://graph.facebook.com/${profile.id}/picture?type=large`;
+        userProfile.gender = profile._json.gender;
+        userProfile.location = profile.location;
+        userProfile = await userProfile.save();
+
+        if(user.logins.length == 0)
+          user.logins.push(userLogin);
+
+        if(!user.profile)
+          user.profile = userProfile;
+
+        user = await user.save();
+        next(null, user);
+
       } else {
-        let user = await __WEBPACK_IMPORTED_MODULE_3__models__["a" /* User */].findOne({ where: { email: profile._json.email } });
-        if (user) {
-          // There is already an account using this email address. Sign in to
-          // that account and link it with Facebook manually from Account Settings.
-          done(null);
-        } else {
-          user = await __WEBPACK_IMPORTED_MODULE_3__models__["a" /* User */].create({
-            email: profile._json.email,
-            emailConfirmed: true,
-            logins: [
-              { name: loginName, key: profile.id },
-            ],
-            claims: [
-              { type: claimType, value: accessToken },
-            ],
-            profile: {
-              displayName: profile.displayName,
-              gender: profile._json.gender,
-              picture: `https://graph.facebook.com/${profile.id}/picture?type=large`,
-            },
-          }, {
-            include: [
-              { model: UserLogin, as: 'logins' },
-              { model: UserClaim, as: 'claims' },
-              { model: UserProfile, as: 'profile' },
-            ],
-          });
-          done(null, {
-            id: user.id,
-            email: user.email,
-          });
-        }
+        user = new __WEBPACK_IMPORTED_MODULE_3__models__["a" /* User */]();
+        //create login with facebook
+        let userLogin = new __WEBPACK_IMPORTED_MODULE_3__models__["b" /* UserLogin */]({
+          name: loginName,
+          key: profile.id,
+          token: accessToken
+        });
+        userLogin = await userLogin.save();
+
+        //create user profile
+        let userProfile = await new __WEBPACK_IMPORTED_MODULE_3__models__["c" /* UserProfile */]({
+          displayName: profile.displayName,
+          picture: `https://graph.facebook.com/${profile.id}/picture?type=large`,
+          gender: profile._json.gender,
+          location: profile.location
+        });
+        userProfile = await userProfile.save();
+
+        //main account
+        user.username = "admin";
+        user.password = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__common_common__["e" /* passwordEncryption */])("123456", user.salt);
+        user.email = profile._json.email;
+        user.logins.push(userLogin);
+        user.profile = userProfile;
+        user = await user.save();
+        next(null, user);
       }
     }
   };
-
-  fooBar().catch(done);
+  fooBar().catch(next);
 }));
 
 /* harmony default export */ __webpack_exports__["a"] = (__WEBPACK_IMPORTED_MODULE_0_passport___default.a);
 
 /***/ }),
-/* 10 */
+/* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_passport_http_bearer__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_passport_http_bearer___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_passport_http_bearer__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_oauth2orize__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_oauth2orize___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_oauth2orize__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_passport__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_passport___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_passport__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__common_common_code__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__common_common__ = __webpack_require__(0);
+/**
+ * Created by hien.tran on 6/2/2017.
+ */
+
+
+
+
+
+
+
+
+let BearerStrategy = __WEBPACK_IMPORTED_MODULE_0_passport_http_bearer___default.a.Strategy;
+let TokenError = __WEBPACK_IMPORTED_MODULE_1_oauth2orize___default.a.TokenError;
+
+
+__WEBPACK_IMPORTED_MODULE_2_passport___default.a.use("bearer", new BearerStrategy(
+  function (accessToken, next) {
+    let promise = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__common_common__["a" /* tokenDecode */])(accessToken);
+    promise.then(result => {
+      if(result)
+        return next(null, result);
+      else
+        return next(new Error('token error'));
+    })
+  }
+));
+
+const validateToken = function(req, res, next) {
+  __WEBPACK_IMPORTED_MODULE_2_passport___default.a.authenticate('bearer', {session: false}, function (err, user, info) {
+    if (err || !user)
+      return res.json(__WEBPACK_IMPORTED_MODULE_3__common_common_code__["a" /* systems */].invalidToken)
+    else {
+      return next();
+    }
+  })(req, res, next)
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (validateToken);
+
+
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports) {
 
 /**
@@ -449,7 +813,6 @@ __WEBPACK_IMPORTED_MODULE_0_passport___default.a.use(new __WEBPACK_IMPORTED_MODU
 module.exports = {
   // Authentication
   auth: {
-    jwt: { secret: process.env.JWT_SECRET || 'React Starter Kit' },
     facebook: {
       clientID: process.env.FACEBOOK_APP_ID || '2006619856232997',
       clientSecret: process.env.FACEBOOK_APP_SECRET || '2466ea45b5f5d3d1b2227758c08f0922',
@@ -470,53 +833,80 @@ module.exports = {
 
 
 /***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Created by hien.tran on 6/2/2017.
- */
-
-
-module.exports = (app) => {
-  let express = __webpack_require__(0)
-    ,router = express.Router();
-
-  router.use("/user", __webpack_require__(12)(app));
-  return router;
-};
-
-/***/ }),
-/* 12 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_express__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_oauth2orize__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_oauth2orize___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_oauth2orize__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_passport__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_passport___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_passport__);
 /**
  * Created by hien.tran on 6/2/2017.
  */
 
 
 
-let router = __WEBPACK_IMPORTED_MODULE_0_express___default.a.Router();
 
-router.get('/', (req, res) => {
-  res.json({ status: "user info" });
+
+let server = __WEBPACK_IMPORTED_MODULE_0_oauth2orize___default.a.createServer();
+
+
+/* harmony default export */ __webpack_exports__["a"] = ({
+  token: [server.token(), server.errorHandler()]
 });
 
-/* harmony default export */ __webpack_exports__["default"] = (router);
-
 /***/ }),
-/* 13 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_express__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__passport_auth_facebook__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__user_route__ = __webpack_require__(20);
+/**
+ * Created by hien.tran on 6/2/2017.
+ */
+
+
+
+
+let router = __WEBPACK_IMPORTED_MODULE_0_express___default.a.Router();
+
+router.use("/user", __WEBPACK_IMPORTED_MODULE_1__user_route__["a" /* default */]);
+/* harmony default export */ __webpack_exports__["a"] = (router);
+
+/***/ }),
+/* 20 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_express__);
+/**
+ * Created by hien.tran on 6/2/2017.
+ */
+
+
+
+let router = __WEBPACK_IMPORTED_MODULE_0_express___default.a.Router();
+
+router.get('/', (req, res) => {
+  //res.clearCookie('id_token');
+  res.json({rs: "ok"});
+});
+
+/* harmony default export */ __webpack_exports__["a"] = (router);
+
+/***/ }),
+/* 21 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_express___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_express__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__passport_auth_facebook__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__common_common__ = __webpack_require__(0);
 /**
  * Created by hien.tran on 6/2/2017.
  */
@@ -525,9 +915,15 @@ router.get('/', (req, res) => {
 
 
 
+
+
 let router = __WEBPACK_IMPORTED_MODULE_0_express___default.a.Router();
 
-router.get('/', (req, res) => {
+router.get('/status', (req, res) => {
+  var cookies = req.cookies;
+  // res.cookie("token", "", { expires: new Date() });
+  // res.cookie("id_token", "", { expires: new Date() });
+  console.log("cookie: ", cookies.token);
   res.json({status: "server runing"});
 });
 
@@ -539,55 +935,82 @@ router.get('/auth/facebook',
   __WEBPACK_IMPORTED_MODULE_1__passport_auth_facebook__["a" /* default */].authenticate('facebook', { scope: ['email', 'user_location'], session: false })
 );
 
-router.get('/auth/facebook/callback', (req, res, next) => {
-  __WEBPACK_IMPORTED_MODULE_1__passport_auth_facebook__["a" /* default */].authenticate('facebook', (err) => {
-    let rs = {
-      success: err,
-      message: "login success"
+router.get('/auth/facebook/callback',
+  __WEBPACK_IMPORTED_MODULE_1__passport_auth_facebook__["a" /* default */].authenticate('facebook', {session: false }),
+  (req, res) => {
+    if (req.user) {
+      let user = {
+        id: req.user._id,
+        username: req.user.username,
+        email: req.user.email
+      }
+      let token = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__common_common__["b" /* tokenGenerate */])(user);
+      user['profile'] = req.user.profile;
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__common_common__["c" /* setTokenCookie */])(res, token);
+      res.json({
+        token: token,
+        user: user
+      });
     }
-    if(err) rs = { success: err, message: 'login fail' }
-    return res.json(rs);
-  })(req, res, next);
+    else {
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__common_common__["d" /* removeTokenCookie */])(res);
+      res.json({
+        token: "",
+        user: null
+      });
+    }
 });
 
 /* harmony default export */ __webpack_exports__["a"] = (router);
 
 /***/ }),
-/* 14 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = require("body-parser");
 
 /***/ }),
-/* 15 */
+/* 23 */
 /***/ (function(module, exports) {
 
 module.exports = require("cookie-parser");
 
 /***/ }),
-/* 16 */
+/* 24 */
+/***/ (function(module, exports) {
+
+module.exports = require("jsonwebtoken");
+
+/***/ }),
+/* 25 */
 /***/ (function(module, exports) {
 
 module.exports = require("passport-facebook");
 
 /***/ }),
-/* 17 */
+/* 26 */
+/***/ (function(module, exports) {
+
+module.exports = require("passport-http-bearer");
+
+/***/ }),
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = require("path");
 
 /***/ }),
-/* 18 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = require("randomstring");
 
 /***/ }),
-/* 19 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(5);
-module.exports = __webpack_require__(4);
+__webpack_require__(10);
+module.exports = __webpack_require__(9);
 
 
 /***/ })

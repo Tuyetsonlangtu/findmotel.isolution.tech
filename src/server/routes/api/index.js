@@ -3,10 +3,9 @@
  */
 
 "use strict";
-module.exports = (app) => {
-  let express = require('express')
-    ,router = express.Router();
+import express from 'express';
+import userRoute from './user.route';
+let router = express.Router();
 
-  router.use("/user", require("./user.route")(app));
-  return router;
-};
+router.use("/user", userRoute);
+export default router;

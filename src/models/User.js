@@ -4,62 +4,74 @@
 
 "use strict";
 import mongoose from 'mongoose';
-import { generateCode } from '../common/common';
+import { createSalt, createId } from '../common/common';
 let Schema = mongoose.Schema;
-
-function metSalt(){
-  return generateCode(50);
-}
-
-function metSetId() {
-  return generateCode(12);
-}
 
 const User = new Schema({
   _id: {
     type: String,
-    default: generateCode,
+    default: createId,
     index: true,
     unique: true
   },
+
   username:{
     type: String,
     unique: true,
   },
+
   password:{
     type: String,
     unique: true,
   },
+
   salt: {
     type: String,
-    default: metSalt
+    default: createSalt
   },
-  fullname: {
-    type: String,
-    unique: true,
-    sparse: true,
-    dropDups: true
-  },
+
   email: {
     type: String,
     unique: true,
     sparse: true,
     dropDups: true
   },
-  phone: String,
+
   isAdmin: {
     type: Boolean,
     default: false
   },
-  accessToken: String,
-  expirationDate: Date,
+
+  accessToken: {
+    type: String,
+    default: ''
+  },
+
+  expirationDate: {
+    type: Date,
+    default: Date.now
+  },
+
   isEnabled: {
     type: Boolean,
     default: true
   },
-  createdAt: {
-    type: Date
+
+  logins: [{
+    type: String,
+    ref: 'UserLogin'
+  }],
+
+  profile: {
+    type: String,
+    ref: 'UserProfile'
   },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+
   updatedAt: {
     type: Date,
     default: Date.now

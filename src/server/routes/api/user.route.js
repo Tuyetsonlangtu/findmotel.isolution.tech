@@ -7,7 +7,8 @@ import express from 'express';
 let router = express.Router();
 
 router.get('/', (req, res) => {
-  res.json({ status: "user info" });
+  //res.clearCookie('id_token');
+  res.json({rs: "ok"});
 });
 
 export default router;

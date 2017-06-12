@@ -1,10 +1,17 @@
-
-if (process.env.BROWSER) {
-  throw new Error('Do not import `config.js` from inside the client-side code.');
-}
-
 const port = 4000;
 module.exports = {
+
+  jwt: {
+    secret: process.env.JWT_SECRET || 'findmotel.isolution.tech',
+    expiresIn: 60 * 60 * 24 * 30,
+    issuer: 'findmotel.isolution.tech'
+  },
+
+  cookie: {
+    expires: new Date(Date.now() + 9999999),
+    httpOnly: false
+  },
+
   // Node.js app
   port: process.env.PORT || port,
 
@@ -22,7 +29,7 @@ module.exports = {
 
   database: {
     mongoose: {
-      databaseURI : "mongodb://10.0.15.5:27017/ISolution-FindMotel",
+      databaseURI : "mongodb://localhost:27017/ISolution-FindMotel",
       logging: false
     }
   }
